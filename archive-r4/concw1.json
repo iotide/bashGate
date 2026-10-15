@@ -1,0 +1,1 @@
+{"cmd": "python3 -c \"open('/home/usera/c1','w').write('PATTERN1'*100000)\" ; python3 -c \"d=open('/home/usera/c1').read(); print('c', d=='PATTERN1'*100000)\""}

@@ -1,0 +1,1 @@
+{"cmd": "python3 -c \"a='x'*(300*1024*1024); print('ALLOC300-OK')\""}

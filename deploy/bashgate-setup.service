@@ -1,0 +1,10 @@
+[Unit]
+Description=bashGate cgroup/init setup (root oneshot)
+Before=bashgate.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/bashgate-setup.sh
+
+[Install]
+WantedBy=multi-user.target

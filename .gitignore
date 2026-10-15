@@ -1,0 +1,6 @@
+# 防守方内部件与备份,永不入库
+docs/CANARY-REGISTRY.md
+backups/
+
+__pycache__/
+local/

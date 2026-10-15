@@ -1,0 +1,42 @@
+[Unit]
+Description=bashGate v4 - multi-tenant restricted shell gateway (mnt-ns + nnp + per-req cgroup)
+After=network.target bashgate-setup.service
+Requires=bashgate-setup.service
+
+[Service]
+Type=simple
+# 委派: v3.1 漏了 cpu → 租户无限 CPU; v4 补上(代码会向子组写 cpu.max)
+Delegate=memory pids cpu
+User=webshell
+Group=webshell
+WorkingDirectory=/software/web-shell
+ExecStart=/usr/bin/node bashgate.js
+Restart=on-failure
+RestartSec=3
+
+# ===== 特权面(v4 核心): 仅三个能力位,不再依赖 SUID sudo =====
+# CAP_SYS_ADMIN 只为 unshare -m / mount 私有 tmpfs;CAP_SETUID/SETGID 为降权
+# 注意: NoNewPrivileges=yes 与 AmbientCapabilities 兼容——NNP 只拦"exec 时经
+# SUID 位/file-caps 获权",不拦能力位继承,因此租户 SUID 全废而降权链照常工作
+AmbientCapabilities=CAP_SYS_ADMIN CAP_SETUID CAP_SETGID
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SETUID CAP_SETGID
+NoNewPrivileges=yes
+
+# ===== 文件系统 =====
+ProtectSystem=full
+ProtectHome=yes
+PrivateTmp=yes
+# 勿加 ProtectControlGroups=yes / ProtectKernelTunables=yes——会把 /sys/fs/cgroup
+# 变只读,直接打断 cgroup 委派写(v4 的资源隔离就没了)
+
+# ===== 资源兜底(宿主机保护;细粒度在每请求 cgroup) =====
+MemoryMax=900M
+CPUQuota=150%
+TasksMax=512
+
+# ===== 加固杂项 =====
+RestrictSUIDSGID=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+{
+  "name": "bashgate",
+  "version": "9.1.0",
+  "description": "多租户 bash 沙箱网关 —— namespace 六件套 + seccomp 32 条 + cgroup 记账 + 零环境变量架构（九轮红队攻防收敛）",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "private": true
+}

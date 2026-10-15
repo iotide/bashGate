@@ -1,0 +1,90 @@
+# bashGate v4 可选策略层 —— AppArmor(默认不启用,属"锦上添花")
+#
+# 为什么是可选: v4 主体(mount ns 视图 + NNP + per-请求 cgroup + DAC)已覆盖全部
+# 已实证缺口。AppArmor 的边际价值是拦"DAC 放行的世界可读文件"(如 /etc/passwd),
+# 但 profile 按**可执行文件路径**全局附着——直接挂在 /usr/bin/bash 上会连 root 的
+# shell 一起管。所以这里挂在租户专用副本路径上,只有租户命中。
+#
+# 启用步骤(服务器 root):
+#   1. cp /usr/bin/bash /software/web-shell/bin/tenant-bash
+#      (bash 升级后需重新拷贝;路径硬编码在本 profile)
+#   2. cp apparmor-tenant /etc/apparmor.d/bashgate.tenant
+#   3. apparmor_parser -r /etc/apparmor.d/bashgate.tenant
+#   4. 先 complain 模式观察: aa-complain bashgate.tenant
+#      (tail -f /var/log/syslog | grep apparmor 看 DENIED,规则补齐后再:)
+#   5. aa-enforce bashgate.tenant
+#   6. bashgate.js 里 TENANT_SHELL 改为 '/software/web-shell/bin/tenant-bash',重启网关
+#
+# 回滚: aa-disable bashgate.tenant; TENANT_SHELL 改回 /usr/bin/bash
+
+#include <tunables/global>
+
+profile bashgate.tenant /software/web-shell/bin/tenant-bash flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  # —— 执行与库(继承本策略,子进程不逃出 profile) ——
+  /usr/bin/* ix,
+  /bin/* ix,
+  /sbin/* ix,
+  /usr/sbin/* ix,
+  /usr/lib/** mr,
+  /lib/** mr,
+  /usr/share/** r,
+  /etc/alternatives/** r,
+
+  # —— 系统只读项(运行所需最小集) ——
+  /etc/passwd r,
+  /etc/group r,
+  /etc/nsswitch.conf r,
+  /etc/hosts r,
+  /etc/resolv.conf r,
+  /etc/gai.conf r,
+  /etc/localtime r,
+  /etc/ld.so.cache r,
+  /etc/ld.so.preload r,
+  /etc/environment r,
+  /etc/default/** r,
+  /etc/profile** r,
+  /etc/bash.bashrc r,
+  /etc/terminfo/** r,
+  /usr/share/zoneinfo/** r,
+  /proc/cpuinfo r,
+  /proc/meminfo r,
+  /proc/uptime r,
+  /proc/version r,
+  /proc/sys/kernel/ngroups_max r,
+  /proc/self/ r,
+  /proc/self/fd/ r,
+  /dev/null rw,
+  /dev/zero r,
+  /dev/full rw,
+  /dev/random r,
+  /dev/urandom r,
+  /dev/tty rw,
+  /dev/pts/** rw,
+  /run/systemd/resolve/stub-resolv.conf r,
+
+  # —— 租户空间 ——
+  /data/ r,
+  /data/share/ r,
+  /data/share/** r,
+  owner /data/userA/ rw,
+  owner /data/userA/** rwk,
+  audit deny /data/userB/** rwklx,   # 双保险: DAC 之外策略再拒一次
+  audit deny /software/** rwklx,
+  audit deny /www/** rwklx,
+  audit deny /root/** rwklx,
+  audit deny /etc/shadow* rwklx,
+  audit deny /var/log/** rwklx,
+
+  # —— 网络(靶场放开;生产建议仅回环) ——
+  network inet stream,
+  network inet dgram,
+  network inet6 stream,
+  network inet6 dgram,
+  network netlink raw,               # getaddrinfo 可能需要
+
+  # —— 能力全禁 ——
+  deny capability *,
+}

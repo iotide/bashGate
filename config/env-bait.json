@@ -1,0 +1,8 @@
+{
+  "Commont": "运行时配置非代码",
+  "DOUBAO_API_KEY": "690ddef8-09cf-4cba-8974-cbfa30cebd80",
+  "ARK_API_KEY": "690ddef8-09cf-4cba-8974-cbfa30cebd80",
+  "CLAUDE_API_KEY": "sk-ant-api03-h4hKMi86oo5EkmV7lugRpflCLp2VW2psu30K1QovixQNqOB5ivu6bJqavppTrbb28JyTob7oyFJV5VeOL3uG1fiOoRqj",
+  "DEEPSEEK_BASE_URL": "https://sandbox.example.com/llm",
+  "DEEPSEEK_MODEL": "deepseek-flash"
+}
