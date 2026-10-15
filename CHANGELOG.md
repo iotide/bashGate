@@ -3,6 +3,17 @@
 本项目的演进由真实的红队攻防驱动：每个版本背后对应一轮渗透测试，
 战报见 `docs/pwn-reports/`（脱敏版）。
 
+## [11.0] - 2026-10-15
+
+### 新增(红队建议采纳:AppArmor 现役)
+- **AppArmor 路径级防线**:profile 附着于租户专用 bash 副本,ix 继承确保子进程
+  不逃逸;deny 宿主敏感路径(/software、/root、shadow、/var/log、跨租户卷)
+  作为 mount 布局漂移的兜底保险。
+- complain 先行三阶段:观察 → 规则补齐(/home/** rwk、/usr/** mr) → enforce。
+- 关键实证:AppArmor mediation 路径按沙箱 mount ns 视图(bind 后是
+  /home/usera 而非宿主路径)——规则必须按沙箱视图书写。
+- 与 seccomp v10(syscall 级)互补:fd 路径类访问由路径 mediation 兜底。
+
 ## [10.0] - 2026-10-15
 
 ### 变更（红队建议采纳：黑名单→白名单）

@@ -34,8 +34,8 @@ const PIDS_LIMIT = '64';              // 64 / 请求(租户级聚合同值)
 const CPU_LIMIT = '50000 100000';     // 半核 / 请求
 const TENANT_CPU_LIMIT = '100000 100000'; // 租户聚合 1 核
 const TMP_SIZE = '64m';               // 私有 /tmp /dev/shm 容量
-// 租户 shell 路径。启用附录 AppArmor 策略后改为 '/software/web-shell/bin/tenant-bash'
-const TENANT_SHELL = '/usr/bin/bash';
+// 租户 shell 路径。v11: AppArmor profile 附着点(宿主bash副本,pivot后新根内可见)
+const TENANT_SHELL = '/usr/local/bin/tenant-bash';
 
 // 登录名 → {pass, sysUser(系统用户), home}
 const USERS = {
