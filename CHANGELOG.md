@@ -3,6 +3,21 @@
 本项目的演进由真实的红队攻防驱动：每个版本背后对应一轮渗透测试，
 战报见 `docs/pwn-reports/`（脱敏版）。
 
+## [10.0] - 2026-10-15
+
+### 变更（红队建议采纳：黑名单→白名单）
+- **seccomp 白名单模式**：默认全部 ENOSYS，仅放行约 150 个 shell/python3/node
+  运行必需 syscall。新内核新 syscall 默认不可达（fail-closed）。
+- **socket 按地址族参数级管理**：AF_UNIX/INET/INET6 放行、AF_NETLINK 拒绝、
+  其余（含 AF_PACKET 原始套接字）默认拒绝——嗅探面连带关闭。
+- **/proc/sys/kernel/sysrq 遮蔽**：假值 0 + immutable（红队实测被 DAC 挡后建议）。
+- proc-mask 全目录 `chattr +i`：配置漂移不再能复活 core_pattern 逃逸链。
+
+### 踩坑记录（重要）
+- libseccomp 中"通配 allow + 参数级 deny"共存时，通配规则会使参数级 deny
+  **静默失效**（两轮部署实测）——socket 类规则必须全部参数级化。
+- ENOSYS 默认拒绝的开发反馈极佳：ls 的 xattr 探测第一时间暴露缺漏。
+
 ## [9.1] - 2026-10-15
 
 ### 安全
